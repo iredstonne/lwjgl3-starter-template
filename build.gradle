@@ -1,0 +1,62 @@
+import org.gradle.internal.os.OperatingSystem
+
+plugins {
+    id "java"
+}
+
+project.ext.lwjglVersion = "3.3.4"
+
+var osArchitecture = System.getProperty("os.arch")
+
+switch (OperatingSystem.current()) {
+    case OperatingSystem.WINDOWS:
+        project.ext.lwjglNatives = "natives-windows"
+        if(osArchitecture.startsWith("aarch64")) { // Support for ARM processors
+            project.ext.lwjglNatives += "-arm64"
+        } else if(!osArchitecture.contains("64")) { // 32-bit x86 backward compatibility
+            project.ext.lwjglNatives += "-x86"
+        }
+        break
+    case OperatingSystem.MAC_OS:
+        project.ext.lwjglNatives = "natives-macos"
+        if(osArchitecture.startsWith("aarch64")) { // Support for ARM processors
+            project.ext.lwjglNatives += "-arm64"
+        }
+        break
+    case OperatingSystem.LINUX:
+        project.ext.lwjglNatives = "natives-linux"
+        if(osArchitecture.startsWith("arm") || osArchitecture.startsWith("aarch64")) { // Support for ARM processors
+            project.ext.lwjglNatives += "-" + osArchitecture.contains("64") ? "arm64" : "arm32" // 32-bit ARM backward compatibility
+        }
+        break
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation platform("org.lwjgl:lwjgl-bom:$lwjglVersion")
+
+    implementation "org.lwjgl:lwjgl"
+    implementation "org.lwjgl:lwjgl-glfw"
+    implementation "org.lwjgl:lwjgl-openal"
+    implementation "org.lwjgl:lwjgl-opengl"
+    implementation "org.lwjgl:lwjgl-stb"
+    implementation "org.lwjgl:lwjgl-tinyfd"
+    runtimeOnly "org.lwjgl:lwjgl::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-glfw::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-openal::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-opengl::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-stb::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-tinyfd::$lwjglNatives"
+
+    implementation "org.jetbrains:annotations:24.0.0"
+
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.8.1"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.8.1"
+}
+
+test {
+    useJUnitPlatform()
+}
